@@ -12,6 +12,7 @@ using namespace std;
 
 sem_t semaphore;
 sem_t finished_semaphore;
+mutex joblist;
 unordered_map<string,mutex> m;
 
 //vector<mutex> m;
@@ -30,45 +31,47 @@ void calculate_function(vector<job> &job_list,unordered_map<string,int> &rec,ato
    //for(int i=0;i<indexx;i++){
     
     while(flag){
-    sem_wait(&semaphore);
-    	if(!job_list.empty()){
-            job tmp=job_list.front();
-            int sum=rec[tmp.numbers.front()];
+        sem_wait(&semaphore);
+            joblist.lock();
+            if(!job_list.empty()){
+                job tmp=job_list.front();
+                m[tmp.start_value].lock();
+                int sum=rec[tmp.numbers.front()];
 
-            for(int i=1;i<tmp.numbers.size();i+=2){
-                string fir,sec;
-                fir=tmp.numbers[i];
-                sec=tmp.numbers[i+1];
-                if(fir=="+"){
-                    if(sec[0]=='$'){
-                        sum=sum+rec[sec];
-                    } 
+                for(int i=1;i<tmp.numbers.size();i+=2){
+                    string fir,sec;
+                    fir=tmp.numbers[i];
+                    sec=tmp.numbers[i+1];
+                    if(fir=="+"){
+                        if(sec[0]=='$'){
+                            sum=sum+rec[sec];
+                        } 
+                        else{
+                            int string_to_int;
+                            stringstream ss;
+                            ss<<sec;
+                            ss>>string_to_int;
+                            sum = sum + string_to_int;
+                        } 
+                    }
                     else{
-                        int string_to_int;
-                        stringstream ss;
-                        ss<<sec;
-                        ss>>string_to_int;
-                        sum = sum + string_to_int;
-                    } 
-                }
-                else{
-                    if(sec[0]=='$') sum=sum-rec[sec];
-                    else{
-                        int string_to_int;
-                        stringstream ss;
-                        ss<<sec;
-                        ss>>string_to_int;
-                        sum = sum - string_to_int;
+                        if(sec[0]=='$') sum=sum-rec[sec];
+                        else{
+                            int string_to_int;
+                            stringstream ss;
+                            ss<<sec;
+                            ss>>string_to_int;
+                            sum = sum - string_to_int;
+                        }
                     }
                 }
-            }
-            rec[tmp.start_value]=sum;
-            job_list.erase(job_list.begin());
-       // }
-    sem_post(&finished_semaphore);
-    sem_post(&semaphore);
-    }
-
+                rec[tmp.start_value]=sum;
+                m[tmp.start_value].unlock();
+                job_list.erase(job_list.begin());
+        // }
+            joblist.unlock();
+        sem_post(&finished_semaphore);
+        }
     }
     return ;
 }
@@ -119,8 +122,21 @@ int main(int argc, char *argv[]){
 		}
 		job_list.push_back(tmp_job);
 	}
-	
+	/*
     sem_post(&semaphore);
+    while(cnt!=total_eq){
+        sem_wait(&finished_semaphore);
+        sem_post(&semaphore);
+        ++cnt;
+    }
+*/
+    
+    //sem_post(&semaphore);
+
+    for(int i=1;i<=total_eq;i++){
+        sem_post(&semaphore);
+    }
+
     while(cnt!=total_eq){
         sem_wait(&finished_semaphore);
         ++cnt;
