@@ -1,10 +1,9 @@
+#include <bits/stdc++.h>
+#include <semaphore.h>
 #include <iostream>
 #include <pthread.h>
 #include <unistd.h>
 #include <fstream>
-#include <bits/stdc++.h>
-#include <semaphore.h>
-#include <iostream>
 #include <mutex>
 #include <atomic>
 #define indexx 100
@@ -78,6 +77,7 @@ void calculate_function(vector<job> &job_list,unordered_map<string,int> &rec,ato
 
 int main(int argc, char *argv[]){
 
+    chrono::steady_clock::time_point start= chrono::steady_clock::now();
 	int t;
 	string equation;
 	unordered_map<string,int> rec;
@@ -163,8 +163,9 @@ int main(int argc, char *argv[]){
     }
 
     //cout<<"here"<<endl;
-
-
+    chrono::steady_clock::time_point end = chrono::steady_clock::now();
+    cout<<"Threads number: "<<argv[1]<<endl;
+    cout<<setprecision(10)<<"Time: "<<chrono::duration_cast<chrono::microseconds>(end-start).count()/double(1000000)<<"s"<<endl;
 
 	return 0;
 }
