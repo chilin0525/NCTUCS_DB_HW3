@@ -34,12 +34,16 @@ void calculate_function(vector<job> &job_list,unordered_map<string,int> &rec,ato
             joblist.lock();
             if(!job_list.empty()){
                 job tmp=job_list.front();
+                
+                job_list.erase(job_list.begin());
+
                 m[tmp.start_value].lock();
                 for(auto &rd_lock:tmp.var){
                     if(rd_lock!=tmp.start_value){
                         m[rd_lock].lock();
                     }
                 }
+                joblist.unlock();
                 for(auto &rd_lock:tmp.var){
                     if(rd_lock!=tmp.start_value){
                         m[rd_lock].unlock();
@@ -75,9 +79,7 @@ void calculate_function(vector<job> &job_list,unordered_map<string,int> &rec,ato
                 }
                 rec[tmp.start_value]=sum;
                 m[tmp.start_value].unlock();
-                job_list.erase(job_list.begin());
         // }
-            joblist.unlock();
         sem_post(&finished_semaphore);
         }
     }
@@ -131,6 +133,7 @@ int main(int argc, char *argv[]){
 		}
 		job_list.push_back(tmp_job);
 	}
+
 	/*
     sem_post(&semaphore);
     while(cnt!=total_eq){
