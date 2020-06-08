@@ -21,7 +21,7 @@ volatile bool des=true;
 
 struct job{
 	string start_value;
-	vector<string> var;
+	set<string> var;
 	vector<string> numbers;
 };
 
@@ -35,8 +35,17 @@ void calculate_function(vector<job> &job_list,unordered_map<string,int> &rec,ato
             if(!job_list.empty()){
                 job tmp=job_list.front();
                 m[tmp.start_value].lock();
+                for(auto &rd_lock:tmp.var){
+                    if(rd_lock!=tmp.start_value){
+                        m[rd_lock].lock();
+                    }
+                }
+                for(auto &rd_lock:tmp.var){
+                    if(rd_lock!=tmp.start_value){
+                        m[rd_lock].unlock();
+                    }
+                }
                 int sum=rec[tmp.numbers.front()];
-
                 for(int i=1;i<tmp.numbers.size();i+=2){
                     string fir,sec;
                     fir=tmp.numbers[i];
@@ -118,7 +127,7 @@ int main(int argc, char *argv[]){
 		ss>>tmp_job.start_value>>tmp; // get varible left = and "="
 		while(ss>>tmp2){
 			tmp_job.numbers.push_back(tmp2);
-			if(tmp2[0]=='$') tmp_job.var.push_back(tmp2);
+			if(tmp2[0]=='$') tmp_job.var.insert(tmp2);
 		}
 		job_list.push_back(tmp_job);
 	}
